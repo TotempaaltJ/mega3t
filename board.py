@@ -18,7 +18,8 @@ class Board(object):
                 self.pieces.append(piece)
             else:
                 raise TypeError('All pieces must be an instance of '
-                                '(a subclass of) Piece.')
+                                '(a subclass of) Piece. Got: {!r}'.format(
+                                    piece))
         if isinstance(n_rows, int):
             self.n_rows = n_rows
         else:
@@ -260,11 +261,16 @@ class AIBoard(Board):
     def __init__(self, *args, **kwargs):
         logger.debug('args: {}'.format(args))
         logger.debug('kwargs: {}'.format(kwargs))
+        self.mutations = {}
         super(AIBoard, self).__init__(*args, **kwargs)
         self.mutations = {piece: [] for piece in self.pieces if piece.is_AI()}
+        self.reset()
+
+    def reset(self):
+        """Reset the board"""
+        super(AIBoard, self).reset()
         for ai in self.mutations:
             ai.save_board_info(self.n_rows, self.pieces)
-
 
     def add_mutation(self, coords, piece):
         for ai in self.mutations:
@@ -281,8 +287,9 @@ class AIBoard(Board):
 
 
     def make_a_move(self, coords, *args, **kwargs):
+        player = self.get_turn()
         if super(AIBoard, self).make_a_move(coords, *args, **kwargs):
-            self.add_mutation(coords, self.get_turn())
+            self.add_mutation(coords, player)
             return True
         return False
 
